@@ -16,7 +16,12 @@ public class Camera {
   }
 
   public void pressShutter() {
-    // not implemented
+    // if powered off, do nothing
+    if (!isPoweredOn) return;
+
+    // otherwise, copy data from
+    // the sensor to the memory card
+    memoryCard.write(sensor.readData());
   }
 
   public void powerOn() {

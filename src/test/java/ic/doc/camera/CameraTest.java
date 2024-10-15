@@ -25,8 +25,8 @@ public class CameraTest {
   @Test
   public void cameraCanBePoweredOnAndOff() {
     context.checking(new Expectations() {{
-      exactly(1).of(sensor).powerUp();
-      exactly(1).of(sensor).powerDown();
+      oneOf(sensor).powerUp();
+      oneOf(sensor).powerDown();
     }});
 
     // check the state of the camera after powering on
@@ -41,7 +41,7 @@ public class CameraTest {
   @Test
   public void switchingTheCameraOnPowersUpTheSensor() {
     context.checking(new Expectations() {{
-      exactly(1).of(sensor).powerUp();
+      oneOf(sensor).powerUp();
     }});
 
     camera.powerOn();
@@ -50,7 +50,7 @@ public class CameraTest {
   @Test
   public void switchingTheCameraOffPowersDownTheSensor() {
     context.checking(new Expectations() {{
-      exactly(1).of(sensor).powerDown();
+      oneOf(sensor).powerDown();
     }});
 
     camera.powerOff();
@@ -61,7 +61,7 @@ public class CameraTest {
     context.checking(new Expectations() {{
       never(memoryCard);
 
-      exactly(1).of(sensor).powerDown();
+      oneOf(sensor).powerDown();
       never(sensor).powerUp();
       never(sensor).readData();
     }});
@@ -72,6 +72,27 @@ public class CameraTest {
     camera.powerOff();
 
     // now, shutter should do nothing
+    camera.pressShutter();
+  }
+
+  @Test
+  public void pressingTheShutterWithThePowerOn_copiesTheDataFromTheSensorToTheMemoryCard() {
+    // Example data that readData() could return
+    final byte[] mockData = new byte[]{1, 2, 3, 4};
+
+    context.checking(new Expectations() {{
+      oneOf(sensor).powerUp();
+
+      oneOf(sensor).readData(); will(returnValue(mockData));
+      oneOf(memoryCard).write(with(equal(mockData)));
+    }});
+
+    // power on the camera to ensure the test performs
+    // as intended without side effects
+    // expect 1x `sensor.powerUp()` for this
+    camera.powerOn();
+
+    // now, shutter should copy data from the sensor to the memory card
     camera.pressShutter();
   }
 }
