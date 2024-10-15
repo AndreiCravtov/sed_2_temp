@@ -11,16 +11,24 @@ public class CameraTest {
   public JUnitRuleMockery context = new JUnitRuleMockery();
 
   Sensor sensor = context.mock(Sensor.class);
+  Camera camera = new Camera(sensor);
 
   @Test
   public void switchingTheCameraOnPowersUpTheSensor() {
-    Camera camera = new Camera(sensor);
-
     context.checking(new Expectations() {{
       exactly(1).of(sensor).powerUp();
     }});
 
     camera.powerOn();
+  }
+
+  @Test
+  public void switchingTheCameraOffPowersDownTheSensor() {
+    context.checking(new Expectations() {{
+      exactly(1).of(sensor).powerDown();
+    }});
+
+    camera.powerOff();
   }
 
 }
