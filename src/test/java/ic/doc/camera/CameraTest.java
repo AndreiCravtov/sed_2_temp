@@ -10,8 +10,9 @@ public class CameraTest {
   @Rule
   public JUnitRuleMockery context = new JUnitRuleMockery();
 
+  MemoryCard memoryCard = context.mock(MemoryCard.class);
   Sensor sensor = context.mock(Sensor.class);
-  Camera camera = new Camera(sensor);
+  Camera camera = new Camera(memoryCard, sensor);
 
   @Test
   public void switchingTheCameraOnPowersUpTheSensor() {
@@ -31,4 +32,22 @@ public class CameraTest {
     camera.powerOff();
   }
 
+  @Test
+  public void pressingTheShutterWhenThePowerIsOffDoesNothing() {
+    context.checking(new Expectations() {{
+      never(memoryCard);
+
+      exactly(1).of(sensor).powerDown();
+      never(sensor).powerUp();
+      never(sensor).readData();
+    }});
+
+    // power off the camera to ensure the test performs
+    // as intended without side effects
+    // expect 1x `sensor.powerDown()` for this
+    camera.powerOff();
+
+    // now, shutter should do nothing
+    camera.pressShutter();
+  }
 }
