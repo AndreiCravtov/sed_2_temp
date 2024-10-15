@@ -1,5 +1,8 @@
 package ic.doc.camera;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.Is.is;
+
 import org.jmock.Expectations;
 import org.jmock.integration.junit4.JUnitRuleMockery;
 import org.junit.Rule;
@@ -13,6 +16,11 @@ public class CameraTest {
   MemoryCard memoryCard = context.mock(MemoryCard.class);
   Sensor sensor = context.mock(Sensor.class);
   Camera camera = new Camera(memoryCard, sensor);
+
+  @Test
+  public void cameraIsPoweredOffByDefault() {
+    assertThat(camera.isPoweredOn(), is(false));
+  }
 
   @Test
   public void switchingTheCameraOnPowersUpTheSensor() {

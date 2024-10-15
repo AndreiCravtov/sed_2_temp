@@ -9,6 +9,10 @@ public class Camera {
     this.sensor = sensor;
   }
 
+  public boolean isPoweredOn() {
+    return false;
+  }
+
   public void pressShutter() {
     // not implemented
   }
