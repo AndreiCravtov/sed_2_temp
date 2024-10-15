@@ -23,6 +23,22 @@ public class CameraTest {
   }
 
   @Test
+  public void cameraCanBePoweredOnAndOff() {
+    context.checking(new Expectations() {{
+      exactly(1).of(sensor).powerUp();
+      exactly(1).of(sensor).powerDown();
+    }});
+
+    // check the state of the camera after powering on
+    camera.powerOn();
+    assertThat(camera.isPoweredOn(), is(true));
+
+    // check the state of the camera after powering off
+    camera.powerOff();
+    assertThat(camera.isPoweredOn(), is(false));
+  }
+
+  @Test
   public void switchingTheCameraOnPowersUpTheSensor() {
     context.checking(new Expectations() {{
       exactly(1).of(sensor).powerUp();
