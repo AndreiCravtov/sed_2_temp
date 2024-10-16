@@ -5,6 +5,7 @@ import static org.hamcrest.core.Is.is;
 
 import java.util.function.BiConsumer;
 import org.jmock.Expectations;
+import org.jmock.Sequence;
 import org.jmock.integration.junit4.JUnitRuleMockery;
 import org.junit.Rule;
 import org.junit.Test;
@@ -86,9 +87,11 @@ public class CameraTest {
 
     }, (memoryCard, sensor) -> { // TESTING
 
+      Sequence powerOnOffSequence = context.sequence("powerOnOffSequence");
+
       context.checking(new Expectations() {{
-        oneOf(sensor).powerUp();
-        oneOf(sensor).powerDown();
+        oneOf(sensor).powerUp(); inSequence(powerOnOffSequence);
+        oneOf(sensor).powerDown(); inSequence(powerOnOffSequence);
       }});
 
       // check the state of the camera after powering on
@@ -211,12 +214,14 @@ public class CameraTest {
 
     }, (memoryCard, sensor) -> { // TESTING
 
+      Sequence shutterSensorMemoryCardSequence = context.sequence("shutterSensorMemoryCardSequence");
+
       // Example data that readData() could return
       final byte[] mockData = new byte[]{1, 2, 3, 4};
 
       context.checking(new Expectations() {{
-        oneOf(sensor).readData(); will(returnValue(mockData));
-        oneOf(memoryCard).write(with(equal(mockData)));
+        oneOf(sensor).readData(); inSequence(shutterSensorMemoryCardSequence); will(returnValue(mockData));
+        oneOf(memoryCard).write(with(equal(mockData))); inSequence(shutterSensorMemoryCardSequence);
       }});
 
       // now, shutter should copy data from the sensor to the memory card
@@ -234,12 +239,13 @@ public class CameraTest {
       camera.powerOn();
 
     }, (memoryCard, sensor) -> { // TESTING
+      Sequence powerDownWhileWritingSequence = context.sequence("powerDownWhileWritingSequence");
 
       context.checking(new Expectations() {{
-        oneOf(sensor).readData();
-        oneOf(memoryCard).write(with(any(byte[].class)));
+        oneOf(sensor).readData(); inSequence(powerDownWhileWritingSequence);
+        oneOf(memoryCard).write(with(any(byte[].class))); inSequence(powerDownWhileWritingSequence);
 
-        oneOf(sensor).powerDown();
+        oneOf(sensor).powerDown(); inSequence(powerDownWhileWritingSequence);
       }});
 
       // shutter should copy data from the sensor to the memory card
@@ -256,4 +262,8 @@ public class CameraTest {
       camera.powerOff();
     });
   }
+
+//  and then, once writing the data has completed, the camera powers down the sensor
+
+
 }
