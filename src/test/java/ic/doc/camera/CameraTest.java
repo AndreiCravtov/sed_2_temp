@@ -12,11 +12,13 @@ import org.junit.Test;
 
 
 public class CameraTest {
+
   @Rule
   public JUnitRuleMockery context = new JUnitRuleMockery();
 
   // Set up memory card mocks and proxies
-  MemoryCard setupMemoryCard = data -> {};
+  MemoryCard setupMemoryCard = data -> {
+  };
   MemoryCard testingMemoryCard = context.mock(MemoryCard.class);
   MemoryCardBinarySwitchProxy memoryCardBinarySwitch = new MemoryCardBinarySwitchProxy(
       setupMemoryCard, testingMemoryCard, true);
@@ -24,13 +26,17 @@ public class CameraTest {
   // Set up sensor mocks and proxies
   Sensor setupSensor = new Sensor() {
     @Override
-    public byte[] readData() { return new byte[0]; }
+    public byte[] readData() {
+      return new byte[0];
+    }
 
     @Override
-    public void powerUp() {}
+    public void powerUp() {
+    }
 
     @Override
-    public void powerDown() {}
+    public void powerDown() {
+    }
   };
   Sensor testingSensor = context.mock(Sensor.class);
   SensorBinarySwitchProxy sensorBinarySwitch = new SensorBinarySwitchProxy(
@@ -90,8 +96,10 @@ public class CameraTest {
       Sequence powerOnOffSequence = context.sequence("powerOnOffSequence");
 
       context.checking(new Expectations() {{
-        oneOf(sensor).powerUp(); inSequence(powerOnOffSequence);
-        oneOf(sensor).powerDown(); inSequence(powerOnOffSequence);
+        oneOf(sensor).powerUp();
+        inSequence(powerOnOffSequence);
+        oneOf(sensor).powerDown();
+        inSequence(powerOnOffSequence);
       }});
 
       // check the state of the camera after powering on
@@ -214,14 +222,18 @@ public class CameraTest {
 
     }, (memoryCard, sensor) -> { // TESTING
 
-      Sequence shutterSensorMemoryCardSequence = context.sequence("shutterSensorMemoryCardSequence");
+      Sequence shutterSensorMemoryCardSequence = context.sequence(
+          "shutterSensorMemoryCardSequence");
 
       // Example data that readData() could return
       final byte[] mockData = new byte[]{1, 2, 3, 4};
 
       context.checking(new Expectations() {{
-        oneOf(sensor).readData(); inSequence(shutterSensorMemoryCardSequence); will(returnValue(mockData));
-        oneOf(memoryCard).write(with(equal(mockData))); inSequence(shutterSensorMemoryCardSequence);
+        oneOf(sensor).readData();
+        inSequence(shutterSensorMemoryCardSequence);
+        will(returnValue(mockData));
+        oneOf(memoryCard).write(with(equal(mockData)));
+        inSequence(shutterSensorMemoryCardSequence);
       }});
 
       // now, shutter should copy data from the sensor to the memory card
@@ -242,10 +254,13 @@ public class CameraTest {
       Sequence powerDownWhileWritingSequence = context.sequence("powerDownWhileWritingSequence");
 
       context.checking(new Expectations() {{
-        oneOf(sensor).readData(); inSequence(powerDownWhileWritingSequence);
-        oneOf(memoryCard).write(with(any(byte[].class))); inSequence(powerDownWhileWritingSequence);
+        oneOf(sensor).readData();
+        inSequence(powerDownWhileWritingSequence);
+        oneOf(memoryCard).write(with(any(byte[].class)));
+        inSequence(powerDownWhileWritingSequence);
 
-        oneOf(sensor).powerDown(); inSequence(powerDownWhileWritingSequence);
+        oneOf(sensor).powerDown();
+        inSequence(powerDownWhileWritingSequence);
       }});
 
       // shutter should copy data from the sensor to the memory card

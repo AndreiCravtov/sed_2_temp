@@ -3,15 +3,17 @@ package ic.doc.camera;
 import org.jmock.api.Expectation;
 
 /**
- * A helper {@link Sensor} proxy for setting up the state of the {@link Camera}
- * without triggering any mocking {@link Expectation} by accident
+ * A helper {@link Sensor} proxy for setting up the state of the {@link Camera} without triggering
+ * any mocking {@link Expectation} by accident
  */
 public class SensorBinarySwitchProxy implements Sensor {
+
   private boolean isUsingFirstSensor;
   private final Sensor firstSensor;
   private final Sensor secondSensor;
 
-  public SensorBinarySwitchProxy(Sensor firstSensor, Sensor secondSensor, boolean isUsingFirstSensor) {
+  public SensorBinarySwitchProxy(Sensor firstSensor, Sensor secondSensor,
+      boolean isUsingFirstSensor) {
     this.isUsingFirstSensor = isUsingFirstSensor;
     this.firstSensor = firstSensor;
     this.secondSensor = secondSensor;

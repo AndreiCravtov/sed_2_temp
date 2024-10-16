@@ -3,15 +3,17 @@ package ic.doc.camera;
 import org.jmock.api.Expectation;
 
 /**
- * A helper {@link MemoryCard} proxy for setting up the state of the {@link Camera}
- * without triggering any mocking {@link Expectation} by accident
+ * A helper {@link MemoryCard} proxy for setting up the state of the {@link Camera} without
+ * triggering any mocking {@link Expectation} by accident
  */
 public class MemoryCardBinarySwitchProxy implements MemoryCard {
+
   private boolean isUsingFirstMemoryCard;
   private final MemoryCard firstMemoryCard;
   private final MemoryCard secondMemoryCard;
 
-  public MemoryCardBinarySwitchProxy(MemoryCard firstMemoryCard, MemoryCard secondMemoryCard, boolean isUsingFirstMemoryCard) {
+  public MemoryCardBinarySwitchProxy(MemoryCard firstMemoryCard, MemoryCard secondMemoryCard,
+      boolean isUsingFirstMemoryCard) {
     this.isUsingFirstMemoryCard = isUsingFirstMemoryCard;
     this.firstMemoryCard = firstMemoryCard;
     this.secondMemoryCard = secondMemoryCard;

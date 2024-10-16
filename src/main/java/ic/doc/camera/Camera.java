@@ -1,6 +1,7 @@
 package ic.doc.camera;
 
 public class Camera implements WriteListener {
+
   private boolean isPoweredOn;
   private boolean isWriting;
   private boolean isWaitingToPowerDownSensor;
@@ -25,7 +26,9 @@ public class Camera implements WriteListener {
 
   public void pressShutter() {
     // If powered off, do nothing
-    if (!isPoweredOn) return;
+    if (!isPoweredOn) {
+      return;
+    }
 
     // Otherwise, copy data from the sensor to the memory card.
     // Set `isWriting` flag, and wait to be notified of completion.
@@ -35,7 +38,9 @@ public class Camera implements WriteListener {
 
   public void powerOn() {
     // If already powered on, do nothing.
-    if (isPoweredOn) return;
+    if (isPoweredOn) {
+      return;
+    }
 
     // Otherwise, power on.
     isPoweredOn = true;
@@ -44,7 +49,9 @@ public class Camera implements WriteListener {
 
   public void powerOff() {
     // If already powered off, do nothing.
-    if (!isPoweredOn) return;
+    if (!isPoweredOn) {
+      return;
+    }
 
     // Otherwise, power off.
     isPoweredOn = false;
