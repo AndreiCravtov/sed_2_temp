@@ -36,11 +36,18 @@ public class Camera implements WriteListener {
   }
 
   public void powerOn() {
+    // If already powered on, do nothing.
+    if (isPoweredOn) return;
+
+    // Otherwise, power on.
     isPoweredOn = true;
     sensor.powerUp();
   }
 
   public void powerOff() {
+    // If already powered off, do nothing.
+    if (!isPoweredOn) return;
+
     // Don't power off if writing to memory card
     if (isWriting) return;
 

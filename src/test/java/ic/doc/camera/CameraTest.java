@@ -122,6 +122,26 @@ public class CameraTest {
   }
 
   @Test
+  public void switchingTheCameraOnWhenItsAlreadyOnDoesNothing() {
+    defineTest(() -> { // SETUP
+
+      // power on the camera to ensure the test performs
+      // as intended without side effects
+      camera.powerOn();
+
+    }, (memoryCard, sensor) -> { // TESTING
+
+      context.checking(new Expectations() {{
+        never(memoryCard);
+        never(sensor);
+      }});
+
+      camera.powerOn();
+
+    });
+  }
+
+  @Test
   public void switchingTheCameraOffPowersDownTheSensor() {
     defineTest(() -> { // SETUP
 
@@ -133,6 +153,26 @@ public class CameraTest {
 
       context.checking(new Expectations() {{
         oneOf(sensor).powerDown();
+      }});
+
+      camera.powerOff();
+
+    });
+  }
+
+  @Test
+  public void switchingTheCameraOffWhenItsAlreadyOffDoesNothing() {
+    defineTest(() -> { // SETUP
+
+      // power off the camera to ensure the test performs
+      // as intended without side effects
+      camera.powerOff();
+
+    }, (memoryCard, sensor) -> { // TESTING
+
+      context.checking(new Expectations() {{
+        never(memoryCard);
+        never(sensor);
       }});
 
       camera.powerOff();
