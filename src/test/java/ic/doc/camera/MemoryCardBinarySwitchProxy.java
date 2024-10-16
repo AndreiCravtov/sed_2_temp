@@ -4,7 +4,7 @@ import org.jmock.api.Expectation;
 
 /**
  * A helper {@link MemoryCard} proxy for setting up the state of the {@link Camera} without
- * triggering any mocking {@link Expectation} by accident
+ * triggering any mocking {@link Expectation} by accident.
  */
 public class MemoryCardBinarySwitchProxy implements MemoryCard {
 

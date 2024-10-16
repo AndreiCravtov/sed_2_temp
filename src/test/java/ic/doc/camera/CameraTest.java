@@ -242,8 +242,12 @@ public class CameraTest {
     });
   }
 
+  /**
+   * If data is currently being written, switching the camera off does not power down the sensor,
+   * and then, once writing the data has completed, the camera powers down the sensor.
+   */
   @Test
-  public void ifDataIsCurrentlyBeingWritten_switchingTheCameraOffDoesNotPowerDownTheSensor_andThen_onceWritingTheDataHasCompleted_theCameraPowersDownTheSensor() {
+  public void ifDataIsCurrentlyBeingWritten_switchingTheCameraOffDoesNotPowerDownTheSensor() {
     defineTest(() -> { // SETUP
 
       // power on the camera to ensure the test performs
@@ -277,8 +281,4 @@ public class CameraTest {
       camera.writeComplete();
     });
   }
-
-//  and then, once writing the data has completed, the camera powers down the sensor
-
-
 }
