@@ -231,7 +231,7 @@ public class CameraTest {
   }
 
   @Test
-  public void ifDataIsCurrentlyBeingWritten_switchingTheCameraOffDoesNotPowerDownTheSensor() {
+  public void ifDataIsCurrentlyBeingWritten_switchingTheCameraOffDoesNotPowerDownTheSensor_andThen_onceWritingTheDataHasCompleted_theCameraPowersDownTheSensor() {
     defineTest(() -> { // SETUP
 
       // power on the camera to ensure the test performs
@@ -252,14 +252,14 @@ public class CameraTest {
       // expect 1x `sensor.readData()` and 1x `memoryCard.write(...)` for this
       camera.pressShutter();
 
-      // while writing, should not be able to shut off
+      // while writing, should not trigger the sensor power down signal
       camera.powerOff();
 
-      // send writing complete signal
+      // but the camera should now be off
+      assertThat(camera.isPoweredOn(), is(false));
+
+      // send writing complete signal, which should shut down the sensor
       camera.writeComplete();
-
-      // now we can finally shut off, 1x sensor.powerDown()
-      camera.powerOff();
     });
   }
 
