@@ -95,4 +95,34 @@ public class CameraTest {
     // now, shutter should copy data from the sensor to the memory card
     camera.pressShutter();
   }
+
+  @Test
+  public void ifDataIsCurrentlyBeingWritten_switchingTheCameraOffDoesNotPowerDownTheSensor() {
+    context.checking(new Expectations() {{
+      oneOf(sensor).powerUp();
+
+      oneOf(sensor).readData();
+      oneOf(memoryCard).write(with(any(byte[].class)));
+
+      oneOf(sensor).powerDown();
+    }});
+
+
+    // power on the camera to ensure the test performs
+    // as intended without side effects
+    // expect 1x `sensor.powerUp()` for this
+    camera.powerOn();
+
+    // now, shutter should copy data from the sensor to the memory card
+    // expect 1x `sensor.readData()` and 1x `memoryCard.write(...)` for this
+    camera.pressShutter();
+
+    // while writing, should not be able to shut off
+    camera.powerOff();
+
+    // send writing complete signal
+    camera.writeComplete();
+
+    camera.powerOff();
+  }
 }
