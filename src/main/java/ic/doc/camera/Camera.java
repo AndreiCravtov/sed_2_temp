@@ -11,6 +11,10 @@ public class Camera implements WriteListener {
     isWriting = false;
     this.memoryCard = memoryCard;
     this.sensor = sensor;
+
+    // Send signal to sensor to power down,
+    // in case it wasn't off already
+    this.sensor.powerDown();
   }
 
   public boolean isPoweredOn() {

@@ -3,126 +3,217 @@ package ic.doc.camera;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 
+import java.util.function.BiConsumer;
 import org.jmock.Expectations;
 import org.jmock.integration.junit4.JUnitRuleMockery;
 import org.junit.Rule;
 import org.junit.Test;
 
-public class CameraTest {
 
+public class CameraTest {
   @Rule
   public JUnitRuleMockery context = new JUnitRuleMockery();
 
-  MemoryCard memoryCard = context.mock(MemoryCard.class);
-  Sensor sensor = context.mock(Sensor.class);
-  Camera camera = new Camera(memoryCard, sensor);
+  // Set up memory card mocks and proxies
+  MemoryCard setupMemoryCard = data -> {};
+  MemoryCard testingMemoryCard = context.mock(MemoryCard.class);
+  MemoryCardBinarySwitchProxy memoryCardBinarySwitch = new MemoryCardBinarySwitchProxy(
+      setupMemoryCard, testingMemoryCard, true);
+
+  // Set up sensor mocks and proxies
+  Sensor setupSensor = new Sensor() {
+    @Override
+    public byte[] readData() { return new byte[0]; }
+
+    @Override
+    public void powerUp() {}
+
+    @Override
+    public void powerDown() {}
+  };
+  Sensor testingSensor = context.mock(Sensor.class);
+  SensorBinarySwitchProxy sensorBinarySwitch = new SensorBinarySwitchProxy(
+      setupSensor, testingSensor, true);
+
+  // Use binary switch proxies to set up camera
+  Camera camera = new Camera(memoryCardBinarySwitch, sensorBinarySwitch);
+
+  // Convenience methods for synchronising the binary switches
+  void useSetupMockObjects() {
+    memoryCardBinarySwitch.useFirstMemoryCard();
+    sensorBinarySwitch.useFirstSensor();
+  }
+
+  void useTestingMockObjects() {
+    memoryCardBinarySwitch.useSecondMemoryCard();
+    sensorBinarySwitch.useSecondSensor();
+  }
+
+  void defineTest(Runnable setup, BiConsumer<MemoryCard, Sensor> testing) {
+    // setup phase
+    setup.run();
+
+    // switch to testing mock objects and run testing
+    useTestingMockObjects();
+    testing.accept(testingMemoryCard, testingSensor);
+  }
 
   @Test
   public void cameraIsPoweredOffByDefault() {
-    assertThat(camera.isPoweredOn(), is(false));
+    defineTest(() -> { // SETUP
+
+    }, (memoryCard, sensor) -> { // TESTING
+
+      // Camera should send signal to sensor to power down,
+      // in case it wasn't off already
+      context.checking(new Expectations() {{
+        oneOf(sensor).powerDown();
+      }});
+
+      Camera constructedCamera = new Camera(memoryCard, sensor);
+      assertThat(constructedCamera.isPoweredOn(), is(false));
+
+    });
   }
 
   @Test
   public void cameraCanBePoweredOnAndOff() {
-    context.checking(new Expectations() {{
-      oneOf(sensor).powerUp();
-      oneOf(sensor).powerDown();
-    }});
+    defineTest(() -> { // SETUP
 
-    // check the state of the camera after powering on
-    camera.powerOn();
-    assertThat(camera.isPoweredOn(), is(true));
+      // power off the camera to ensure the test performs
+      // as intended without side effects
+      camera.powerOff();
 
-    // check the state of the camera after powering off
-    camera.powerOff();
-    assertThat(camera.isPoweredOn(), is(false));
+    }, (memoryCard, sensor) -> { // TESTING
+
+      context.checking(new Expectations() {{
+        oneOf(sensor).powerUp();
+        oneOf(sensor).powerDown();
+      }});
+
+      // check the state of the camera after powering on
+      camera.powerOn();
+      assertThat(camera.isPoweredOn(), is(true));
+
+      // check the state of the camera after powering off
+      camera.powerOff();
+      assertThat(camera.isPoweredOn(), is(false));
+
+    });
   }
 
   @Test
   public void switchingTheCameraOnPowersUpTheSensor() {
-    context.checking(new Expectations() {{
-      oneOf(sensor).powerUp();
-    }});
+    defineTest(() -> { // SETUP
 
-    camera.powerOn();
+      // power off the camera to ensure the test performs
+      // as intended without side effects
+      camera.powerOff();
+
+    }, (memoryCard, sensor) -> { // TESTING
+
+      context.checking(new Expectations() {{
+        oneOf(sensor).powerUp();
+      }});
+
+      camera.powerOn();
+
+    });
   }
 
   @Test
   public void switchingTheCameraOffPowersDownTheSensor() {
-    context.checking(new Expectations() {{
-      oneOf(sensor).powerDown();
-    }});
+    defineTest(() -> { // SETUP
 
-    camera.powerOff();
+      // power on the camera to ensure the test performs
+      // as intended without side effects
+      camera.powerOn();
+
+    }, (memoryCard, sensor) -> { // TESTING
+
+      context.checking(new Expectations() {{
+        oneOf(sensor).powerDown();
+      }});
+
+      camera.powerOff();
+
+    });
   }
 
   @Test
   public void pressingTheShutterWhenThePowerIsOffDoesNothing() {
-    context.checking(new Expectations() {{
-      never(memoryCard);
+    defineTest(() -> { // SETUP
 
-      oneOf(sensor).powerDown();
-      never(sensor).powerUp();
-      never(sensor).readData();
-    }});
+      // power off the camera to ensure the test performs
+      // as intended without side effects
+      camera.powerOff();
 
-    // power off the camera to ensure the test performs
-    // as intended without side effects
-    // expect 1x `sensor.powerDown()` for this
-    camera.powerOff();
+    }, (memoryCard, sensor) -> { // TESTING
 
-    // now, shutter should do nothing
-    camera.pressShutter();
+      context.checking(new Expectations() {{
+        never(memoryCard);
+        never(sensor);
+      }});
+
+      // shutter should do nothing
+      camera.pressShutter();
+
+    });
   }
 
   @Test
   public void pressingTheShutterWithThePowerOn_copiesTheDataFromTheSensorToTheMemoryCard() {
-    // Example data that readData() could return
-    final byte[] mockData = new byte[]{1, 2, 3, 4};
+    defineTest(() -> { // SETUP
 
-    context.checking(new Expectations() {{
-      oneOf(sensor).powerUp();
+      // power on the camera to ensure the test performs
+      // as intended without side effects
+      camera.powerOn();
 
-      oneOf(sensor).readData(); will(returnValue(mockData));
-      oneOf(memoryCard).write(with(equal(mockData)));
-    }});
+    }, (memoryCard, sensor) -> { // TESTING
 
-    // power on the camera to ensure the test performs
-    // as intended without side effects
-    // expect 1x `sensor.powerUp()` for this
-    camera.powerOn();
+      // Example data that readData() could return
+      final byte[] mockData = new byte[]{1, 2, 3, 4};
 
-    // now, shutter should copy data from the sensor to the memory card
-    camera.pressShutter();
+      context.checking(new Expectations() {{
+        oneOf(sensor).readData(); will(returnValue(mockData));
+        oneOf(memoryCard).write(with(equal(mockData)));
+      }});
+
+      // now, shutter should copy data from the sensor to the memory card
+      camera.pressShutter();
+
+    });
   }
 
   @Test
   public void ifDataIsCurrentlyBeingWritten_switchingTheCameraOffDoesNotPowerDownTheSensor() {
-    context.checking(new Expectations() {{
-      oneOf(sensor).powerUp();
+    defineTest(() -> { // SETUP
 
-      oneOf(sensor).readData();
-      oneOf(memoryCard).write(with(any(byte[].class)));
+      // power on the camera to ensure the test performs
+      // as intended without side effects
+      camera.powerOn();
 
-      oneOf(sensor).powerDown();
-    }});
+    }, (memoryCard, sensor) -> { // TESTING
 
+      context.checking(new Expectations() {{
+        oneOf(sensor).readData();
+        oneOf(memoryCard).write(with(any(byte[].class)));
 
-    // power on the camera to ensure the test performs
-    // as intended without side effects
-    // expect 1x `sensor.powerUp()` for this
-    camera.powerOn();
+        oneOf(sensor).powerDown();
+      }});
 
-    // now, shutter should copy data from the sensor to the memory card
-    // expect 1x `sensor.readData()` and 1x `memoryCard.write(...)` for this
-    camera.pressShutter();
+      // shutter should copy data from the sensor to the memory card
+      // expect 1x `sensor.readData()` and 1x `memoryCard.write(...)` for this
+      camera.pressShutter();
 
-    // while writing, should not be able to shut off
-    camera.powerOff();
+      // while writing, should not be able to shut off
+      camera.powerOff();
 
-    // send writing complete signal
-    camera.writeComplete();
+      // send writing complete signal
+      camera.writeComplete();
 
-    camera.powerOff();
+      // now we can finally shut off, 1x sensor.powerDown()
+      camera.powerOff();
+    });
   }
 }
